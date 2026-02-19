@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Biblioteca</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Sistema de Gestión de Biblioteca</h1>
+        <p>Simulación Web</p>
+    </header>
+
+    <main>
+
+        <section class="card">
+            <h2>Registrar Libro</h2>
+            <input type="text" id="titulo" placeholder="Título del libro">
+            <input type="text" id="autor" placeholder="Autor">
+            <button onclick="registrarLibro()">Agregar Libro</button>
+        </section>
+
+        <section class="card">
+            <h2>Registrar Usuario</h2>
+            <input type="text" id="nombreUsuario" placeholder="Nombre del usuario">
+            <button onclick="registrarUsuario()">Agregar Usuario</button>
+        </section>
+
+        <section class="card">
+            <h2>Realizar Préstamo</h2>
+            <select id="selectUsuario"></select>
+            <select id="selectLibro"></select>
+            <button onclick="realizarPrestamo()">Prestar Libro</button>
+        </section>
+        <section class="card">
+            <h2>Devolver Libro</h2>
+            <select id="selectUsuarioDevolver"></select>
+            <select id="selectLibroDevolver"></select>
+            <button onclick="devolverLibro()">Devolver Libro</button>
+        </section>
+
+
+        <section class="card">
+            <h2>Estado del Sistema</h2>
+            <div id="estado"></div>
+        </section>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
