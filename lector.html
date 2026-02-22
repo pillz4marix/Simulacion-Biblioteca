@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lector Pro - BiblioTecmi</title>
+    <style>
+        :root {
+            --color-papel: #fdf6e3;
+            --color-texto: #1a1a1a;
+            --vel: 0.8s;
+            --primary: #38bdf8;
+        }
+
+        body { 
+            background: #020617; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+            perspective: 3000px;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+        }
+
+        /* Capa de Portada Inicial */
+        #capa-portada {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #020617;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 1000;
+            transition: all 0.8s ease-out;
+            cursor: pointer;
+        }
+        .portada-img { 
+            width: 300px; height: 450px; 
+            background-size: cover; 
+            background-position: center;
+            border: 6px solid white; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+        #capa-portada.abierto { opacity: 0; visibility: hidden; transform: scale(1.1); }
+
+        /* Estructura del Libro */
+        .libro-abierto {
+            width: 1000px; height: 600px;
+            display: flex;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .pagina-estatica {
+            width: 50%; height: 100%;
+            background: var(--color-papel);
+            padding: 45px;
+            box-sizing: border-box;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .izq { border-radius: 10px 0 0 10px; border-right: 1px solid rgba(0,0,0,0.1); }
+        .der { border-radius: 0 10px 10px 0; }
+
+        /* Animación de Hojas */
+        .hoja-vuelo {
+            position: absolute; width: 50%; height: 100%;
+            transform-style: preserve-3d; z-index: 10; display: none;
+        }
+        .desde-der { left: 50%; transform-origin: left; }
+        .desde-izq { left: 0; transform-origin: right; }
+        .cara {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden; background: var(--color-papel);
+            padding: 45px; box-sizing: border-box;
+        }
+        .atras { transform: rotateY(180deg); }
+
+        .animar-adelante { animation: giroAdelante var(--vel) forwards ease-in-out; }
+        .animar-atras { animation: giroAtras var(--vel) forwards ease-in-out; }
+        @keyframes giroAdelante { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(-180deg); } }
+        @keyframes giroAtras { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(180deg); } }
+
+        /* Contenido del Texto */
+        h1 { font-size: 18px; text-align: center; color: #555; margin-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.1); text-transform: uppercase; }
+        .texto { 
+            font-size: 17px; line-height: 1.7; text-align: justify; 
+            white-space: pre-wrap; color: var(--color-texto);
+            max-height: 420px; overflow-y: auto; padding-right: 10px;
+        }
+        /* Scrollbar personalizado para las páginas */
+        .texto::-webkit-scrollbar { width: 5px; }
+        .texto::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+
+        /* Navegación */
+        .nav-btn {
+            position: fixed; top: 50%; transform: translateY(-50%);
+            background: var(--primary); color: #020617; border: none;
+            width: 60px; height: 60px; border-radius: 50%; cursor: pointer;
+            z-index: 100; font-size: 30px; font-weight: bold; transition: 0.3s;
+        }
+        .nav-btn:hover { background: #7dd3fc; transform: translateY(-50%) scale(1.1); }
+        .nav-btn:disabled { background: #1e293b; color: #475569; cursor: not-allowed; transform: translateY(-50%) scale(1); }
+        #btn-prev { left: 30px; }
+        #btn-next { right: 30px; }
+
+        .indicador { 
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
+            color: white; font-size: 14px; background: rgba(15, 23, 42, 0.8);
+            padding: 8px 20px; border-radius: 30px; border: 1px solid var(--primary);
+        }
+        .btn-cerrar { position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; z-index: 1001; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <button class="btn-cerrar" onclick="window.location.href='index.html'">Volver al Catálogo</button>
+
+    <div id="capa-portada" onclick="abrirLibro()">
+        <div id="img-portada" class="portada-img"></div>
+        <h2 id="titulo-portada" style="color:white; margin-top:25px; text-transform: uppercase;">Cargando...</h2>
+        <p style="color:#94a3b8;">(Haz clic para abrir el libro)</p>
+    </div>
+
+    <button id="btn-prev" class="nav-btn" onclick="navegar(-2)">‹</button>
+    <button id="btn-next" class="nav-btn" onclick="navegar(2)">›</button>
+    
+    <div class="indicador" id="num-pag">Página 1</div>
+
+    <div class="libro-abierto">
+        <div class="pagina-estatica izq" id="pag-izq"></div>
+        <div class="pagina-estatica der" id="pag-der"></div>
+        <div class="hoja-vuelo" id="hoja-vuelo">
+            <div class="cara frente" id="vuelo-frente"></div>
+            <div class="cara atras" id="vuelo-atras"></div>
+        </div>
+    </div>
+
+    <script>
+
+        const libroData = JSON.parse(localStorage.getItem("libroLeyendo"));
+        const userIdx = localStorage.getItem("userIdx");
+        const libroID = localStorage.getItem("libroIDActual") || "anonimo";
+
+        if (!libroData) {
+            window.location.href = "index.html";
+        }
+
+        let paginas = (libroData.contenido || "Este libro no tiene contenido registrado.")
+                      .split(/\n\s*\n/)
+                      .map(p => p.trim())
+                      .filter(p => p.length > 0);
+        
+        if (paginas.length === 0) paginas = ["Contenido vacío."];
+
+        const llaveProgreso = `progreso_${userIdx}_${libroID}`;
+        let pAct = parseInt(localStorage.getItem(llaveProgreso)) || 0;
+
+        if (pAct >= paginas.length) pAct = 0;
+        if (pAct % 2 !== 0) pAct--;
+
+        function prepararInterfaz() {
+            document.getElementById("titulo-portada").innerText = libroData.titulo;
+            if(libroData.portada) {
+                document.getElementById("img-portada").style.backgroundImage = `url('${libroData.portada}')`;
+            }
+            actualizarFondo();
+        }
+
+        function actualizarFondo() {
+
+            document.getElementById("pag-izq").innerHTML = `<h1>${libroData.titulo}</h1><div class="texto">${paginas[pAct] || ""}</div>`;
+
+            let contenidoDer = paginas[pAct + 1] 
+                ? `<h1>${libroData.titulo}</h1><div class="texto">${paginas[pAct + 1]}</div>` 
+                : `<div style="text-align:center; margin-top:50%; color:#999; font-style:italic;">Fin de la obra</div>`;
+            document.getElementById("pag-der").innerHTML = contenidoDer;
+
+            document.getElementById("num-pag").innerText = `PÁGINAS ${pAct + 1}-${Math.min(pAct + 2, paginas.length)} DE ${paginas.length}`;
+            document.getElementById("btn-prev").disabled = pAct <= 0;
+            document.getElementById("btn-next").disabled = (pAct + 2) >= paginas.length;
+        }
+
+        function navegar(dir) {
+            const vuelo = document.getElementById("hoja-vuelo");
+            vuelo.style.display = "block";
+
+            if (dir === 2) {
+
+                vuelo.className = "hoja-vuelo desde-der animar-adelante";
+                document.getElementById("vuelo-frente").innerHTML = `<h1>${libroData.titulo}</h1><div class="texto">${paginas[pAct+1] || ""}</div>`;
+                document.getElementById("vuelo-atras").innerHTML = `<h1>${libroData.titulo}</h1><div class="texto">${paginas[pAct+2] || ""}</div>`;
+            } else {
+
+                vuelo.className = "hoja-vuelo desde-izq animar-atras";
+                document.getElementById("vuelo-frente").innerHTML = `<h1>${libroData.titulo}</h1><div class="texto">${paginas[pAct] || ""}</div>`;
+                document.getElementById("vuelo-atras").innerHTML = `<h1>${libroData.titulo}</h1><div class="texto">${paginas[pAct-1] || ""}</div>`;
+            }
+
+            setTimeout(() => {
+                pAct += dir;
+                actualizarFondo();
+                localStorage.setItem(llaveProgreso, pAct);
+            }, 400);
+
+            setTimeout(() => {
+                vuelo.style.display = "none";
+                vuelo.className = "hoja-vuelo";
+            }, 800);
+        }
+
+        function abrirLibro() {
+            document.getElementById("capa-portada").classList.add("abierto");
+        }
+
+        prepararInterfaz();
+    </script>
+</body>
+</html>
