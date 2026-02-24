@@ -56,7 +56,7 @@ function entrarComoUsuario() {
 }
 
 function entrarComoAdmin() {
-    if (document.getElementById("login-pass").value === "1234") {
+    if (document.getElementById("login-pass").value === "MaYa240625$") {
         sessionStorage.setItem("esAdmin", "true");
         localStorage.removeItem("userIdx");
         location.reload();
@@ -329,3 +329,4 @@ document.addEventListener("keydown", (event) => {
         else if (document.activeElement === inputAdmin) entrarComoAdmin();
     }
 });
+
