@@ -46,8 +46,6 @@ const guardar = () => {
     }).catch((error) => console.error("Error de conexión:", error));
 };
 
-// --- AUTENTICACIÓN Y REGISTRO ---
-
 function registrarUsuario() {
     const nombre = document.getElementById("reg-nombre").value.trim();
     const pass = document.getElementById("reg-pass").value.trim();
@@ -197,6 +195,7 @@ function devolver(libroI) {
 
 function abrirLector(i) {
     localStorage.setItem("libroLeyendo", JSON.stringify(libros[i]));
+    localStorage.setItem("libroIDActual", libros[i].titulo);
     window.location.href = "lector.html";
 }
 
